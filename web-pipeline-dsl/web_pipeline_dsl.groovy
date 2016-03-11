@@ -268,25 +268,18 @@ exit 0
         }
       }
     }
+	
     steps {
       shell("""
-ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_analysis_template.html -u /opt/static-analysis/report_usage_analysis_template.html 
+ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml 
 """)
     }
     publishers {      	
-      publishHtml {
-        report('.') {
-          reportName('Duplication report')
-          reportFiles('report_duplication_analysis.html')
-          alwaysLinkToLastBuild(true)
-        }
-        
-        report('.') {
-          reportName('Usage report')
-          reportFiles('report_analysis_unused.html')
-          alwaysLinkToLastBuild(true)
-        }
-      }
+	  archiveXUnit {
+	    jUnit {
+		  pattern('report_*.xml')
+	    }
+	  }      
 	  mailer('', false, false)      
     }    
   }
