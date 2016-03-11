@@ -278,7 +278,7 @@ ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication
 	  archiveXUnit {
 	    jUnit {
 		  pattern('report_*.xml')
-		  failIfNotNew(true)
+		  failIfNotNew(false)
 	    }
 	  }      
 	  mailer('', false, false)      
