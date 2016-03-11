@@ -8,6 +8,8 @@ The docker plugin requires just a docker host that has internet access to pull i
 
 The configuration of the cloud is self explanatory.
 
+The job dsl also generates jobs that publish and build our docker image infrastructure for testing our websites.
+
 ### Required Jenkins plugins
 
 * [GitHub plugin](https://wiki.jenkins-ci.org/display/JENKINS/GitHub+Plugin)
