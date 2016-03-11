@@ -2,7 +2,7 @@
 
 ## Infrastructure
 
-If you want to use docker for your slaves. Docker plugin is required. With the latest version of docker (currently `1.10`) i had to build a snapshot version (`1.16.1-SNAPSHOT`) of the Docker plugin to get it working. 
+If you want to use docker for your slaves. Docker plugin is required. With the latest version of docker (currently `1.10`) i had to build a snapshot version (`1.16.1-SNAPSHOT`) of the Docker plugin to get it working. Docker is also required if you want to have the preconfigured environment.
 
 The docker plugin requires just a docker host that has internet access to pull images when needed. The docker host acts as a cloud on Jenkins and can spawn slaves on demand. 
 
@@ -28,6 +28,14 @@ Docker images used in the proces:
 * [Praqma gh-pages image](https://hub.docker.com/r/praqma/gh-pages/)
 * [Praqma linkchecker image](https://hub.docker.com/r/praqma/linkchecker/)
 
+The docker images have the following repositories
 
+* [Praqma gh-pages image](https://github.com/Praqma/docker-gh-pages)
+* [Praqma linkchecker image](https://github.com/Praqma/docker-linkchecker) 
+
+
+## Testing docker images
+
+By convention we've decided to let the docker images be tested by adding a `test.sh` file in the root of the repo. When a commit is pushed, the `test.sh` file is executed, if it returns a non-zero value, the test has failed. 
 
 
