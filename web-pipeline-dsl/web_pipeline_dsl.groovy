@@ -9,67 +9,67 @@ def dockerHostLabel = 'GiJeLiSlave'
 
 currentDockerImages.each { image ->
   def cloneUrl = "${githubUrl}"+"${image}"
-  
+
   //Verification job bame
   def verifyName = "Web_Docker_"+"${image}"+"-verify"
-  
+
   //Publish job name
   def publishName = "Web_Docker_"+"${image}"+"-publish"
-  
+
   //Docker repo name
   def dRepoName = "praqma/${image}"
-  
+
   job(verifyName) {
 	label(dockerHostLabel)
-    
+
     triggers {
       githubPush()
     }
-    
+
     scm {
       git {
-        
+
         remote {
           url(cloneUrl)
           credentials(releasePraqmaCredentials)
         }
-        
+
         branch(branchName)
-        
+
         configure {
           node ->
           node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
         }
       }
     }
-    
+
     steps {
-      shell("docker build -t praqma/${image}:snapshot .") 
+      shell("docker build -t praqma/${image}:snapshot .")
       shell('./test.sh')
-	  shell("docker rmi praqma/${image}:snapshot")		            
-    }  
-    
+	  shell("docker rmi praqma/${image}:snapshot")
+    }
+
     publishers {
       buildPipelineTrigger(publishName) {
         parameters{
           gitRevision(false)
         }
       }
-	  mailer('', false, false)            
+	  mailer('', false, false)
     }
   }
-  
+
   //Publish jobs
   job(publishName) {
-    label(dockerHostLabel)    
+    label(dockerHostLabel)
     scm {
       git {
-        
+
         remote {
           url(cloneUrl)
           credentials(releasePraqmaCredentials)
         }
-        
+
         branch(branchName)
           configure {
             node ->
@@ -77,7 +77,7 @@ currentDockerImages.each { image ->
           }
       }
     }
-    
+
     steps {
       dockerBuildAndPublish {
         repositoryName(dRepoName)
@@ -87,9 +87,9 @@ currentDockerImages.each { image ->
         forcePull(false)
         createFingerprints(false)
         skipDecorate()
-      }      
+      }
     }
-    
+
     publishers {
       git {
         pushOnlyIfSuccess()
@@ -99,9 +99,9 @@ currentDockerImages.each { image ->
           create()
         }
       }
-      mailer('', false, false)      
+      mailer('', false, false)
     }
-    
+
   }
 }
 //#########################################################################################################
@@ -118,83 +118,86 @@ Updated 17-03-2016
 def websites = [
   'http://www.praqma.com':'https://github.com/Praqma/praqma.com.git',
   'http://www.josra.org':'https://github.com/josra/josra.github.io.git'
+  'http://new.code-conf.com':'https://github.com/Praqma/code-conf.com.git'
 ]
 
 //Specify the full intergration branch name
 def integrationBranches = [
 	'http://www.praqma.com':'gh-pages',
-  	'http://www.josra.org':'master'
+	'http://www.josra.org':'master',
+  'http://new.code-conf.com':'gh-pages',
+
 ]
 
 //The 'verify' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
 //We're enabling pretested integration for this part of the pipeline.
 //TODO: Currently i have an issue with the docker image not picking up the correct locale when the slave is connected using ssh.
 //Ideally this should just spawn a slave just like the rest of the jobs. Instead it just uses do
-websites.each { site, weburl -> 
+websites.each { site, weburl ->
   job('Web_'+site.split('http://')[1] + '-verify') {
     label(dockerHostLabel)
 
  	triggers {
         githubPush()
     }
-    
-    scm {
-      git {
-        
-        remote {
-          url(weburl)
-          credentials(releasePraqmaCredentials)
-        }
-        
-        branch(readyBranch)
-        
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
-        }
-      }
-    }
-    
-    steps {
-      shell('docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll build')
-    }
-    
-    wrappers {
-      pretestedIntegration("SQUASHED", integrationBranches[site], "origin")
-    }
-    
-    publishers {
-	  archiveArtifacts('_site/**')
-      pretestedIntegration()
-      mailer('', false, false)      
-    }    
-  }
-  
-  //TRIGGER JOBS
-  job('Web_'+site.split('http://')[1] + '-trigger') {
-        
-    triggers {
-      githubPush()
-    }
-    
 
     scm {
       git {
-        
+
         remote {
           url(weburl)
           credentials(releasePraqmaCredentials)
         }
-        
-        branch(integrationBranches[site])
-        
+
+        branch(readyBranch)
+
         configure {
           node ->
           node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
         }
       }
     }
-    
+
+    steps {
+      shell('docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll build')
+    }
+
+    wrappers {
+      pretestedIntegration("SQUASHED", integrationBranches[site], "origin")
+    }
+
+    publishers {
+	  archiveArtifacts('_site/**')
+      pretestedIntegration()
+      mailer('', false, false)
+    }
+  }
+
+  //TRIGGER JOBS
+  job('Web_'+site.split('http://')[1] + '-trigger') {
+
+    triggers {
+      githubPush()
+    }
+
+
+    scm {
+      git {
+
+        remote {
+          url(weburl)
+          credentials(releasePraqmaCredentials)
+        }
+
+        branch(integrationBranches[site])
+
+        configure {
+          node ->
+          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        }
+      }
+    }
+
     steps {
       downstreamParameterized {
         trigger(['Web_'+site.split('http://')[1] + '-linkcheck','Web_'+site.split('http://')[1] + '-resource-analysis']) {
@@ -205,29 +208,29 @@ websites.each { site, weburl ->
       }
     }
   }
-  
+
   //The linkchecker job should run the linkchecker command and produce a set of parsable report files
   job('Web_'+site.split('http://')[1] + '-linkcheck') {
     label('linkchecker')
     description(descriptionHtml)
-    
-    scm {      
+
+    scm {
       git {
-        
+
         remote {
           url(weburl)
           credentials(releasePraqmaCredentials)
         }
-        
+
         branch(integrationBranches[site])
-        
+
         configure {
           node ->
           node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
         }
       }
     }
-    
+
     steps {
       shell("""
 set +e
@@ -235,14 +238,14 @@ linkchecker -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html 
 exit 0
       """)
     }
-    
-    publishers {      	
+
+    publishers {
       warnings(null,['LinkChecker CSV (Jekyll flavor)':'linkchecker.report.csv'])
-      
+
       analysisCollector() {
         warnings()
       }
-      
+
       publishHtml {
         report('.') {
           reportName('Linkchecker report')
@@ -250,9 +253,9 @@ exit 0
           alwaysLinkToLastBuild(true)
         }
       }
-      
-      mailer('', false, false)      
-      
+
+      mailer('', false, false)
+
     }
   }
   //The resource analysis job. TODO: Implement this
@@ -260,35 +263,35 @@ exit 0
 	label('ruby')
     scm {
       git {
-        
+
         remote {
           url(weburl)
           credentials(releasePraqmaCredentials)
         }
-        
+
         branch(integrationBranches[site])
-        
+
         configure {
           node ->
           node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
         }
       }
     }
-	
+
     steps {
       shell("""
-ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml 
+ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
 """)
     }
-    publishers {      	
+    publishers {
 	  archiveXUnit {
 	    jUnit {
 		  pattern('report_*.xml')
 		  failIfNotNew(false)
 	    }
-	  }      
-	  mailer('', false, false)      
-    }    
+	  }
+	  mailer('', false, false)
+    }
   }
 }
 
