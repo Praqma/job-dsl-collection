@@ -117,7 +117,7 @@ Updated 17-03-2016
 //List of websites we need to create a pipeline for
 def websites = [
   'http://www.praqma.com':'https://github.com/Praqma/praqma.com.git',
-  'http://www.josra.org':'https://github.com/josra/josra.github.io.git'
+  'http://www.josra.org':'https://github.com/josra/josra.github.io.git',
   'http://new.code-conf.com':'https://github.com/Praqma/code-conf.com.git'
 ]
 
