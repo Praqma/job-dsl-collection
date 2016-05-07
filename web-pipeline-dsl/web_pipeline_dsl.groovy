@@ -119,14 +119,16 @@ def descriptionHtml = """
 def websites = [
   'http://www.praqma.com':'https://github.com/Praqma/praqma.com.git',
   'http://www.josra.org':'https://github.com/josra/josra.github.io.git',
-  'http://new.code-conf.com':'https://github.com/Praqma/code-conf.com.git'
+  'http://new.code-conf.com':'https://github.com/Praqma/code-conf.com.git',
+  'http://www.lakruzz.com':'https://github.com/lakruzz/lakruzz.github.io.git'
 ]
 
 //Specify the full intergration branch name
 def integrationBranches = [
 	'http://www.praqma.com':'gh-pages',
 	'http://www.josra.org':'master',
-  'http://new.code-conf.com':'gh-pages'
+        'http://new.code-conf.com':'gh-pages',
+        'http://www.lakruzz.com':'master'
 ]
 
 //The 'verify' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
