@@ -2,7 +2,7 @@ import javaposse.jobdsl.dsl.jobs.FreeStyleJob
 
 def project_name = '2git'
 def repo_name = 'Praqma/2git'
-def cred_id = "releasepraqma..."
+def cred_id = "100247a2-70f4-4a4e-a9f6-266d139da9db"
 
 /** Integration **/
 def integrationJob = job("$project_name-integrate") {
