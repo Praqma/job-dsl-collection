@@ -16,12 +16,11 @@ def integrationJob = job("$project_name-integrate") {
                 credentials(cred_id)
             }
             branch('ready/**')
+            extensions {
+                cleanBeforeCheckout()
+                pruneBranches()
+            }
         }
-    }
-
-    configure {
-        it / scm / extensions << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
-        it / scm / extensions << 'hudson.plugins.git.extensions.impl.PruneStaleBranches' {}
     }
 
     triggers {
