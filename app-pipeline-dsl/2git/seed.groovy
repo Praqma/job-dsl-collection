@@ -15,7 +15,7 @@ def integrationJob = job("$project_name-integrate") {
                 github(repo_name)
                 credentials(cred_id)
             }
-            branch('ready/**')
+            branch('*/ready/*')
             extensions {
                 cleanBeforeCheckout()
                 pruneBranches()
