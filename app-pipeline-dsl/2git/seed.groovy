@@ -82,7 +82,7 @@ def docsJob = job("$project_name-docs") {
 
 
 /** UTILS **/
-def defaults(FreeStyleJob job) {
+def defaults(def job) {
     job.with {
         logRotator(-1, 10)
 
