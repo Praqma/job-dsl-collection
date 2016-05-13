@@ -64,9 +64,7 @@ def docsJob = job("$project_name-docs") {
     }
 
     steps {
-        shell(  'git status\n' +
-                'git log\n' +
-                'git branch -avvv\n' +
+        shell(  'git checkout master\n' +
                 'sha1=$(git subtree split -q --prefix docs master)\n' +
                 'git checkout -q gh-pages\n' +
                 'git merge --ff-only $sha1')
