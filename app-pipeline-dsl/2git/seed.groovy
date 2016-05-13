@@ -36,7 +36,7 @@ def integrationJob = job("$project_name-integrate") {
     publishers {
         pretestedIntegration()
         downstreamParameterized {
-            trigger() {
+            trigger("$project_name-docs") {
                 parameters {
                     gitRevision(true)
                 }
