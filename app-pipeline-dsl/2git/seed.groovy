@@ -66,7 +66,7 @@ def docsJob = job("$project_name-docs") {
         shell(  'git checkout master\n' +
                 'sha1=$(git subtree split -q --prefix docs master)\n' +
                 'git checkout -q gh-pages\n' +
-                'git merge -X theirs $sha1')
+                'git merge --ff-only $sha1')
     }
 
     publishers {
