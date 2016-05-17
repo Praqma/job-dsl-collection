@@ -57,8 +57,7 @@ def docsJob = job("$project_name-docs") {
             }
             branch('master')
             extensions {
-                cleanBeforeCheckout()
-                pruneBranches()
+                wipeOutWorkspace()
             }
         }
     }
