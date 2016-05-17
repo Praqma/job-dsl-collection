@@ -73,9 +73,6 @@ def docsJob = job("$project_name-docs") {
         git {
             pushOnlyIfSuccess()
             branch('origin', 'gh-pages')
-            tag('origin', 'docs-for-${GIT_REVISION,length=5}') {
-                create()
-            }
         }
     }
 }
