@@ -115,7 +115,9 @@ def releaseJob = job("$project_name-release") {
         }
         git {
             pushOnlyIfSuccess()
-            tag('origin', '${VERSION}')
+            tag('origin', '${VERSION}') {
+                create()
+            }
         }
     }
 }
