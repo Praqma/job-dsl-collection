@@ -30,7 +30,7 @@ def integrationJob = job("$project_name-integrate") {
     }
 
     steps {
-        gradle("test")
+        gradle("clean test")
     }
 
     publishers {
@@ -45,6 +45,7 @@ def integrationJob = job("$project_name-integrate") {
     }
 }
 
+/** Update docs **/
 def docsJob = job("$project_name-docs") {
     defaults(delegate)
     description('updates gh-pages documentation')
@@ -74,9 +75,50 @@ def docsJob = job("$project_name-docs") {
             pushOnlyIfSuccess()
             branch('origin', 'gh-pages')
         }
+        buildPipelineTrigger("$project_name-release") {
+            parameters {
+                gitRevision(true)
+            }
+        }
     }
 }
 
+/** Release **/
+def releaseJob = job("$project_name-release") {
+    defaults(delegate)
+    description('tags commit and archives the uberjar')
+
+    scm {
+        git {
+            remote {
+                github(repo_name)
+                credentials(cred_id)
+            }
+            branch('master')
+            extensions {
+                wipeOutWorkspace()
+            }
+        }
+    }
+
+    steps {
+        environmentVariables {
+            propertiesFile('gradle.properties')
+        }
+        gradle('clean uberjar')
+    }
+
+    publishers {
+        archiveArtifacts {
+            pattern('build/libs/*.jar')
+            onlyIfSuccessful()
+        }
+        git {
+            pushOnlyIfSuccess()
+            tag('origin', '${VERSION}')
+        }
+    }
+}
 
 /** UTILS **/
 def defaults(def job) {
