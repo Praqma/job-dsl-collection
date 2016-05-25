@@ -1,5 +1,3 @@
-#imports all variables from environmental variables
-
 def thr = Thread.currentThread()
 def build = thr?.executable
 def envVarsMap = build.parent.builds[0].properties.get("envVars")
