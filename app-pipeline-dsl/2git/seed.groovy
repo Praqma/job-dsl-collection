@@ -101,6 +101,10 @@ def releaseJob = job("$project_name-release") {
         }
     }
 
+    authorization {
+        permission('hudson.model.Item.Read', 'anonymous')
+    }
+
     steps {
         environmentVariables {
             propertiesFile('gradle.properties')
