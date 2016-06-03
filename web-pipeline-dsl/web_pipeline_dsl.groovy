@@ -238,9 +238,7 @@ websites.each { site, weburl ->
 
     steps {
       shell("""
-set +e
 linkchecker -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html ${site}
-exit 0
       """)
     }
 
