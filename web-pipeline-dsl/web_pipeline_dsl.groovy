@@ -238,7 +238,7 @@ websites.each { site, weburl ->
 
     steps {
       shell("""
-linkchecker --user-agent=Mozilla/4.0 -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html ${site}
+linkchecker --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html ${site}
       """)
     }
 
