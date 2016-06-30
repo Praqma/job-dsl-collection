@@ -238,7 +238,7 @@ websites.each { site, weburl ->
 
     steps {
       shell("""
-linkchecker -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html ${site}
+linkchecker --user-agent=Mozilla/4.0 -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html ${site}
       """)
     }
 
@@ -256,6 +256,7 @@ linkchecker -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html 
           alwaysLinkToLastBuild(true)
         }
       }
+      archiveArtifacts('linkchecker*.*')
 
       mailer('', false, false)
 
