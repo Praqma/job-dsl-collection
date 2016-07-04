@@ -172,7 +172,8 @@ websites.each { site, weburl ->
     }
 
     publishers {
-	  archiveArtifacts('_site/**')
+      archiveArtifacts('_site/**')
+      textFinder(/ Error: |Warning: /, ''  , true, false, true )
       pretestedIntegration()
       mailer('', false, false)
     }
