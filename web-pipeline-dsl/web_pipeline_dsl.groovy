@@ -164,7 +164,17 @@ websites.each { site, weburl ->
     }
 
     steps {
-      shell('docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll build')
+      shell('''
+git log --decorate  --oneline --graph ''' + integrationBranches[site] + '''..${GIT_BRANCH} 2>&1 | tee git_graph.txt
+
+GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae,%ce" -1`
+env | grep -e '^GIT' > git.env
+
+docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll build 2>&1 | tee jekyll_build.txt
+''')
+      environmentVariables {
+        propertiesFile('git.env')
+      }
     }
 
     wrappers {
@@ -175,7 +185,20 @@ websites.each { site, weburl ->
       archiveArtifacts('_site/**')
       textFinder(/ Error: |Warning: /, ''  , true, false, true )
       pretestedIntegration()
-      mailer('', false, false)
+      extendedEmail {
+        triggers {
+          failure {
+            attachBuildLog(true)
+            attachmentPatterns('*.txt')
+            recipientList('${GIT_AUTHOR_COMMITTER}')
+          }
+          unstable {
+            attachBuildLog(true)
+            attachmentPatterns('*.txt')
+            recipientList('${GIT_AUTHOR_COMMITTER}')
+          }
+        }
+      }
     }
   }
 
