@@ -225,7 +225,7 @@ docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll 
 
     steps {
       shell("""
-docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/groovy:snapshot groovy /home/jenkins/imageSizeChecker.groovy
+docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/groovy groovy /home/jenkins/imageSizeChecker.groovy
       """)
     }
 
