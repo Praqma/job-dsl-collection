@@ -230,7 +230,7 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/groovy:sn
     }
 
     publishers {
-      textFinder(/ Error: |Warning: /, ''  , true, false, true )
+      textFinder(/Error:/, ''  , true, false, true )
     }
   }
 
