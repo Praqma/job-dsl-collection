@@ -1,5 +1,5 @@
 //#######################################DOCKER IMAGE INFRASTRUCTURE#######################################
-def currentDockerImages = ['linkchecker','gh-pages', 'pac']
+def currentDockerImages = ['linkchecker', 'gh-pages', 'pac', 'image-size-checker']
 
 //Convention: all our docker image repos are prefixed with "docker-"
 def githubUrl = 'https://github.com/Praqma/docker-'
@@ -202,6 +202,38 @@ docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll 
     }
   }
 
+  job('Web_'+site.split('http://')[1] + '-image-size-checker') {
+    label(dockerHostLabel)
+    description(descriptionHtml)
+
+    scm {
+      git {
+
+        remote {
+          url(weburl)
+          credentials(releasePraqmaCredentials)
+        }
+
+        branch(integrationBranches[site])
+
+        configure {
+          node ->
+          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        }
+      }
+    }
+
+    steps {
+      shell("""
+docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins/site/ praqma/groovy:snapshot groovy /home/jenkins/imageSizeChecker.groovy
+      """)
+    }
+
+    publishers {
+      textFinder(/ Error: |Warning: /, ''  , true, false, true )
+    }
+  }
+
   //TRIGGER JOBS
   job('Web_'+site.split('http://')[1] + '-trigger') {
 
@@ -229,7 +261,9 @@ docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll 
 
     steps {
       downstreamParameterized {
-        trigger(['Web_'+site.split('http://')[1] + '-linkcheck','Web_'+site.split('http://')[1] + '-resource-analysis']) {
+        trigger(['Web_'+site.split('http://')[1] + '-linkcheck',
+                 'Web_'+site.split('http://')[1] + '-image-size-checker',
+                 'Web_'+site.split('http://')[1] + '-resource-analysis']) {
           parameters{
             gitRevision(false)
           }
