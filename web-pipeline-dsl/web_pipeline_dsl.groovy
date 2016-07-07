@@ -75,6 +75,13 @@ currentDockerImages.each { image ->
             node ->
             node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
           }
+        configure {
+          node ->
+          node / 'extensions' << 'hudson.plugins.git.extensions.impl.UserIdentity' {
+            name("praqma");
+            email("support@praqma.net");
+          }
+        }
       }
     }
 
