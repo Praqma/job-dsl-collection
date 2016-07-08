@@ -190,7 +190,7 @@ docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll 
 
     publishers {
       archiveArtifacts('_site/**')
-      textFinder(/ Error: |Warning: /, ''  , true, false, true )
+      textFinder(/ Error: |Warning: |Liquid Exception: /, ''  , true, false, true )
       pretestedIntegration()
       extendedEmail {
         triggers {
