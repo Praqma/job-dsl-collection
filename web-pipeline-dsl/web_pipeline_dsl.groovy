@@ -1,5 +1,5 @@
 //#######################################DOCKER IMAGE INFRASTRUCTURE#######################################
-def currentDockerImages = ['linkchecker', 'gh-pages', 'pac', 'image-size-checker']
+def currentDockerImages = ['linkchecker', 'gh-pages', 'pac', 'image-size-checker', 'geb']
 
 //Convention: all our docker image repos are prefixed with "docker-"
 def githubUrl = 'https://github.com/Praqma/docker-'
@@ -238,6 +238,38 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/image-siz
 
     publishers {
       textFinder(/Error:/, ''  , true, false, true )
+    }
+  }
+
+  job('Web_'+site.split('http://')[1] + '-geb') {
+    label(dockerHostLabel)
+    description(descriptionHtml)
+
+    scm {
+      git {
+
+        remote {
+          url(weburl)
+          credentials(releasePraqmaCredentials)
+        }
+
+        branch(integrationBranches[site])
+
+        configure {
+          node ->
+          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        }
+      }
+    }
+
+    steps {
+      shell("""
+docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/image-size-checker groovy /home/jenkins/imageSizeChecker.groovy
+      """)
+    }
+
+    publishers {
+      textFinder(/Assertion failed:/, ''  , true, false, true )
     }
   }
 
