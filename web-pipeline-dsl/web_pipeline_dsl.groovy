@@ -264,7 +264,7 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/image-siz
 
     steps {
       shell("""
-docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb groovy /home/jenkins/geb.groovy
+docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb groovy /home/jenkins/site/tests/main.groovy
       """)
     }
 
