@@ -335,8 +335,20 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
 
     steps {
       shell("""
-linkchecker --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' -o text -Fcsv/linkchecker.report.csv -Fhtml/linkchecker.report.html ${site}
-      """)
+#!/usr/bin/env bash -x
+
+linkchecker \\
+   \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
+   --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
+   -o text -Fcsv/linkchecker.report.csv \\
+   -Fhtml/linkchecker.report.html \\
+   --complete \\
+   ${site} \\
+   > linkchecker.log 2>&1 \\
+   || echo 'INFO: Warnings and/or errors detected - needs interpretation'
+
+grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo "ERROR: linkchecker issue(s) detected" )
+""")
     }
 
     publishers {
@@ -354,6 +366,8 @@ linkchecker --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) 
         }
       }
       archiveArtifacts('linkchecker*.*')
+
+      textFinder(/ERROR: linkchecker issue\(s\) detected/, ''  , true, false, true )
 
       mailer('', false, false)
 
