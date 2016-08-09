@@ -334,9 +334,11 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
       shell('''#!/usr/bin/env bash -x
 git branch -a
 
-_GIT_STABLE_BRANCH=$(git branch -a | grep -e "remotes/origin/stable$"  || echo ''' + integrationBranches[site] + ''' )
+export GIT_STABLE_BRANCH=$(git branch -a | grep -q -e "remotes/origin/stable$" && echo stable )
 
-export GIT_STABLE_BRANCH=$(echo ${_GIT_STABLE_BRANCH} | sed -e 's/ remotes\\/origin\\///g')
+if [ "${GIT_STABLE_BRANCH}x" == "x" ] ; then
+  export GIT_STABLE_BRANCH=''' + integrationBranches[site] + '''
+fi
 
 git log \\
    --decorate \\
@@ -365,12 +367,23 @@ cat git.env
       }
       downstreamParameterized {
         trigger(['Web_'+site.split('http://')[1] + '-linkcheck',
-                 'Web_'+site.split('http://')[1] + '-image-size-checker',
                  'Web_'+site.split('http://')[1] + '-resource-analysis']) {
           block {
             buildStepFailure('FAILURE')
             failure('FAILURE')
             unstable('UNSTABLE')
+          }
+          parameters{
+            gitRevision(true)
+          }
+        }
+      }
+      downstreamParameterized {
+        trigger(['Web_'+site.split('http://')[1] + '-image-size-checker' ] ) {
+          block {
+            buildStepFailure('never')
+            failure('never')
+            unstable('never')
           }
           parameters{
             gitRevision(true)
@@ -384,6 +397,21 @@ cat git.env
         branch('origin', '${GIT_STABLE_BRANCH}')
       }
       archiveArtifacts('git.env','git_graph.txt')
+      extendedEmail {
+        triggers {
+          failure {
+            attachBuildLog(true)
+            attachmentPatterns('git_graph.txt')
+            recipientList('${GIT_AUTHOR_COMMITTER}')
+          }
+          unstable {
+            attachBuildLog(true)
+            attachmentPatterns('git_graph.txt')
+            recipientList('${GIT_AUTHOR_COMMITTER}')
+          }
+        }
+      }
+
     }
   }
 
@@ -416,17 +444,23 @@ cat git.env
       shell("""
 #!/usr/bin/env bash -x
 
-linkchecker \\
-   \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
-   --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
-   -o text -Fcsv/linkchecker.report.csv \\
-   -Fhtml/linkchecker.report.html \\
-   --complete \\
-   ${site} \\
-   > linkchecker.log 2>&1 \\
-   || echo 'INFO: Warnings and/or errors detected - needs interpretation'
+run_linkchecker () {
+  linkchecker \\
+     \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
+     --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
+     -o text -Fcsv/linkchecker.report.csv \\
+     -Fhtml/linkchecker.report.html \\
+     --complete \\
+     ${site} \\
+     > linkchecker.log 2>&1 \\
+     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
+}
+
+run_linkchecker
+grep "timeout: timed out" linkchecker.report.csv && ( echo "We have timeout - try again in 10 sec" && sleep 10 && run_linkchecker )
 
 grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo "ERROR: linkchecker issue(s) detected" )
+
 """)
     }
 
