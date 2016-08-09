@@ -21,6 +21,9 @@ currentDockerImages.each { image ->
 
   job(verifyName) {
 	label(dockerHostLabel)
+    wrappers {
+      timestamps()
+    }
 
     triggers {
       githubPush()
@@ -62,6 +65,9 @@ currentDockerImages.each { image ->
   //Publish jobs
   job(publishName) {
     label(dockerHostLabel)
+    wrappers {
+      timestamps()
+    }
     scm {
       git {
 
@@ -122,6 +128,8 @@ def descriptionHtml = """
 <p>Updated ${udate}</p>
 """
 
+
+
 //List of websites we need to create a pipeline for
 def websites = [
   'http://www.praqma.com':'https://github.com/Praqma/praqma.com.git',
@@ -132,13 +140,13 @@ def websites = [
 
 ]
 
-//Specify the full intergration branch name
+//Specify the full integration branch name
 def integrationBranches = [
-	'http://www.praqma.com':'gh-pages',
-	'http://www.josra.org':'master',
-        'http://www.code-conf.com':'gh-pages',
-        'http://www.lakruzz.com':'master',
-        'http://code-maturity.praqma.com':'gh-pages'
+  'http://www.praqma.com':'gh-pages',
+  'http://www.josra.org':'master',
+  'http://www.code-conf.com':'gh-pages',
+  'http://www.lakruzz.com':'master',
+  'http://code-maturity.praqma.com':'gh-pages'
 ]
 
 //The 'verify' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
@@ -151,6 +159,9 @@ websites.each { site, weburl ->
 
  	triggers {
         githubPush()
+    }
+    wrappers {
+      timestamps()
     }
 
     scm {
@@ -172,20 +183,33 @@ websites.each { site, weburl ->
 
     steps {
       shell('''
-git log --decorate  --oneline --graph ''' + integrationBranches[site] + '''..${GIT_BRANCH} 2>&1 | tee git_graph.txt
+git log \\
+    --decorate \\
+    --oneline \\
+    --graph \\
+    ''' + integrationBranches[site] + '''..${GIT_BRANCH} \\
+    2>&1 | tee git_graph.txt
 
-GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae,%ce" -1`
+GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" -1`
+
 env | grep -e '^GIT' > git.env
-
-docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll build 2>&1 | tee jekyll_build.txt
 ''')
       environmentVariables {
         propertiesFile('git.env')
       }
+      shell("""
+docker run \\
+       -u jenkins \\
+       --rm \\
+       -v \$(pwd):/home/jenkins \\
+       praqma/gh-pages \\
+       jekyll build 2>&1 | tee jekyll_build.txt
+""")
     }
 
     wrappers {
       pretestedIntegration("SQUASHED", integrationBranches[site], "origin")
+      timestamps()
     }
 
     publishers {
@@ -212,6 +236,9 @@ docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll 
   job('Web_'+site.split('http://')[1] + '-image-size-checker') {
     label(dockerHostLabel)
     description(descriptionHtml)
+    wrappers {
+      timestamps()
+    }
 
     scm {
       git {
@@ -232,7 +259,7 @@ docker run -u jenkins --rm -v ${WORKSPACE}:/home/jenkins praqma/gh-pages jekyll 
 
     steps {
       shell("""
-docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/image-size-checker groovy /home/jenkins/imageSizeChecker.groovy
+docker run -u jenkins --rm -v \$(pwd):/home/jenkins/site/ praqma/image-size-checker groovy /home/jenkins/imageSizeChecker.groovy
       """)
     }
 
@@ -245,6 +272,9 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/image-siz
     label(dockerHostLabel)
     description(descriptionHtml)
 
+    wrappers {
+      timestamps()
+    }
     scm {
       git {
 
@@ -275,7 +305,9 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
 
   //TRIGGER JOBS
   job('Web_'+site.split('http://')[1] + '-trigger') {
-
+    wrappers {
+      timestamps()
+    }
     triggers {
       githubPush()
     }
@@ -299,15 +331,59 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
     }
 
     steps {
+      shell('''#!/usr/bin/env bash -x
+git branch -a
+
+_GIT_STABLE_BRANCH=$(git branch -a | grep -e "remotes/origin/stable$"  || echo ''' + integrationBranches[site] + ''' )
+
+export GIT_STABLE_BRANCH=$(echo ${_GIT_STABLE_BRANCH} | sed -e 's/ remotes\\/origin\\///g')
+
+git log \\
+   --decorate \\
+   --oneline \\
+   --graph \\
+   --all \\
+   -20 \\
+   2>&1 | tee git_graph.txt
+
+_GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" origin/${GIT_STABLE_BRANCH}..HEAD `
+if [ "${_GIT_AUTHOR_COMMITTER}x" == "x" ] && [ "${GIT_PREVIOUS_SUCCESSFUL_COMMIT}x" != "${GIT_COMMIT}x" ]; then
+  _GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" origin/${GIT_PREVIOUS_SUCCESSFUL_COMMIT}..HEAD`
+fi
+if [ "${_GIT_AUTHOR_COMMITTER}x" == "x" ]; then
+  _GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" -1`
+fi
+
+export GIT_AUTHOR_COMMITTER=`echo "${_GIT_AUTHOR_COMMITTER}" | sed -e 's/ /,/g'`
+
+env | grep -e '^GIT' > git.env
+
+cat git.env
+''')
+      environmentVariables {
+        propertiesFile('git.env')
+      }
       downstreamParameterized {
         trigger(['Web_'+site.split('http://')[1] + '-linkcheck',
                  'Web_'+site.split('http://')[1] + '-image-size-checker',
                  'Web_'+site.split('http://')[1] + '-resource-analysis']) {
+          block {
+            buildStepFailure('FAILURE')
+            failure('FAILURE')
+            unstable('UNSTABLE')
+          }
           parameters{
-            gitRevision(false)
+            gitRevision(true)
           }
         }
       }
+    }
+    publishers {
+      git {
+        pushOnlyIfSuccess()
+        branch('origin', '${GIT_STABLE_BRANCH}')
+      }
+      archiveArtifacts('git.env','git_graph.txt')
     }
   }
 
@@ -315,6 +391,9 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
   job('Web_'+site.split('http://')[1] + '-linkcheck') {
     label('linkchecker')
     description(descriptionHtml)
+    wrappers {
+      timestamps()
+    }
 
     scm {
       git {
@@ -376,6 +455,9 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
   //The resource analysis job. TODO: Implement this
   job('Web_'+site.split('http://')[1] + '-resource-analysis') {
 	label('ruby')
+    wrappers {
+      timestamps()
+    }
     scm {
       git {
 
@@ -394,9 +476,13 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
     }
 
     steps {
-      shell("""
+      shell('''
 ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
-""")
+
+echo "Unused files:"
+grep '<failure type="Unusued file">' report_analysis_unused.xml || echo "INFO: no unused files"
+
+''')
     }
     publishers {
 	  archiveXUnit {
@@ -404,7 +490,22 @@ ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication
 		  pattern('report_*.xml')
 		  failIfNotNew(false)
 	    }
+        failedThresholds {
+          unstableNew(0)
+          unstable()
+          failure()
+          failureNew()
+        }
+        skippedThresholds{
+            unstableNew(0)
+            unstable(0)
+            failure()
+            failureNew()
+        }
 	  }
+
+      archiveArtifacts('report_*.xml')
+
 	  mailer('', false, false)
     }
   }
