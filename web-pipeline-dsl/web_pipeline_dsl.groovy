@@ -21,6 +21,7 @@ currentDockerImages.each { image ->
 
   job(verifyName) {
 	label(dockerHostLabel)
+	logRotator(-1,10)
     wrappers {
       timestamps()
     }
@@ -65,6 +66,7 @@ currentDockerImages.each { image ->
   //Publish jobs
   job(publishName) {
     label(dockerHostLabel)
+	logRotator(-1,10)
     wrappers {
       timestamps()
     }
@@ -156,6 +158,7 @@ def integrationBranches = [
 websites.each { site, weburl ->
   job('Web_'+site.split('http://')[1] + '-verify') {
     label(dockerHostLabel)
+	logRotator(-1,10)
 
  	triggers {
         githubPush()
@@ -235,6 +238,7 @@ docker run \\
 
   job('Web_'+site.split('http://')[1] + '-image-size-checker') {
     label(dockerHostLabel)
+	logRotator(-1,10)
     description(descriptionHtml)
     wrappers {
       timestamps()
@@ -305,6 +309,7 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
 
   //TRIGGER JOBS
   job('Web_'+site.split('http://')[1] + '-trigger') {
+	logRotator(-1,10)
     wrappers {
       timestamps()
     }
@@ -418,6 +423,7 @@ cat git.env
   //The linkchecker job should run the linkchecker command and produce a set of parsable report files
   job('Web_'+site.split('http://')[1] + '-linkcheck') {
     label('linkchecker')
+	logRotator(-1,10)
     description(descriptionHtml)
     wrappers {
       timestamps()
@@ -489,6 +495,7 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
   //The resource analysis job. TODO: Implement this
   job('Web_'+site.split('http://')[1] + '-resource-analysis') {
 	label('ruby')
+	logRotator(-1,10)
     wrappers {
       timestamps()
     }
