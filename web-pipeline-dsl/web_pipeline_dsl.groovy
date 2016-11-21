@@ -5,7 +5,7 @@ def currentDockerImages = ['linkchecker', 'gh-pages', 'pac', 'image-size-checker
 def githubUrl = 'https://github.com/Praqma/docker-'
 def branchName = "master" //"\${BRANCH}"
 def releasePraqmaCredentials = '100247a2-70f4-4a4e-a9f6-266d139da9db'
-def dockerHostLabel = 'GiJeLiSlave'
+def dockerHostLabel = 'dockerhost1'
 
 currentDockerImages.each { image ->
   def cloneUrl = "${githubUrl}"+"${image}"
