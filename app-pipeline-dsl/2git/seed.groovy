@@ -13,7 +13,7 @@ def integrationJob = job("$project_name-integrate") {
                 github(repo_name)
                 credentials(cred_id)
             }
-            branch('*/ready/*')
+            branch('*/ready/**')
             extensions {
                 cleanBeforeCheckout()
                 pruneBranches()
@@ -35,46 +35,6 @@ def integrationJob = job("$project_name-integrate") {
 
     publishers {
         pretestedIntegration()
-        downstreamParameterized {
-            trigger("$project_name-docs") {
-                parameters {
-                    gitRevision(true)
-                }
-            }
-        }
-    }
-}
-
-/** Update docs **/
-def docsJob = job("$project_name-docs") {
-    defaults(delegate)
-    description('updates gh-pages documentation')
-
-    scm {
-        git {
-            remote {
-                github(repo_name)
-                credentials(cred_id)
-            }
-            branch('master')
-            extensions {
-                wipeOutWorkspace()
-            }
-        }
-    }
-
-    steps {
-        shell(  'git checkout master\n' +
-                'sha1=$(git subtree split -q --prefix docs master)\n' +
-                'git checkout -q gh-pages\n' +
-                'git merge --ff-only $sha1')
-    }
-
-    publishers {
-        git {
-            pushOnlyIfSuccess()
-            branch('origin', 'gh-pages')
-        }
         buildPipelineTrigger("$project_name-release") {
             parameters {
                 gitRevision(true)
