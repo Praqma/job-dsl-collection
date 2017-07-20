@@ -134,7 +134,6 @@ def descriptionHtml = """
 
 //List of websites we need to create a pipeline for
 def websites = [
-  'http://www.praqma.com':'https://github.com/Praqma/praqma.com.git',
   'http://www.josra.org':'https://github.com/josra/josra.github.io.git',
   'http://www.code-conf.com':'https://github.com/Praqma/code-conf.com.git',
   'http://www.lakruzz.com':'https://github.com/lakruzz/lakruzz.github.io.git',
@@ -144,7 +143,6 @@ def websites = [
 
 //Specify the full integration branch name
 def integrationBranches = [
-  'http://www.praqma.com':'gh-pages',
   'http://www.josra.org':'master',
   'http://www.code-conf.com':'gh-pages',
   'http://www.lakruzz.com':'master',
