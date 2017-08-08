@@ -16,12 +16,14 @@ def branchName = envVarsMap['branchName']
 def readyBranch = envVarsMap['readyBranch']
 
 def websites = [
+	(envVarsMap['praqma.com']):(envVarsMap['praqma.com_giturl']),
   (envVarsMap['josra.org']):(envVarsMap['josra.org_giturl']),
   (envVarsMap['new.code-conf.com']):(envVarsMap['new.code-conf.com_giturl']),
   (envVarsMap['lakruzz.com']):(envVarsMap['lakruzz.com_giturl'])
 ]
 
 def integrationBranches = [
+	(envVarsMap['praqma.com']):(envVarsMap['praqma.com_integbranch']),
 	(envVarsMap['josra.org']):(envVarsMap['josra.org_integbranch']),
 	(envVarsMap['new.code-conf.com']):(envVarsMap['new.code-conf.com_integbranch']),
 	(envVarsMap['lakruzz.com']):(envVarsMap['lakruzz.com_integbranch'])
