@@ -12,7 +12,7 @@ def descriptionHtml = """
 """
 
 //Read from config
-def webconfig = new ConfigSlurper().parse(new File("${System.getenv("WORKSPACE")}","web-pipeline-dsl/webconfig.groovy").text)
+def webconfig = new ConfigSlurper().parse(new File("webconfig.groovy").text)
 
 //The 'integrate' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
 //We're enabling pretested integration for this part of the pipeline.
