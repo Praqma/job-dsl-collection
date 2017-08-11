@@ -1,125 +1,6 @@
-//#######################################DOCKER IMAGE INFRASTRUCTURE#######################################
-def currentDockerImages = ['linkchecker', 'gh-pages', 'pac', 'image-size-checker', 'geb']
-
-//Convention: all our docker image repos are prefixed with "docker-"
-def githubUrl = 'https://github.com/Praqma/docker-'
-def branchName = "master" //"\${BRANCH}"
+def branchName = "master" 
 def releasePraqmaCredentials = '100247a2-70f4-4a4e-a9f6-266d139da9db'
-def dockerHostLabel = 'dockerhost1'
-
-currentDockerImages.each { image ->
-  def cloneUrl = "${githubUrl}"+"${image}"
-
-  //Verification job bame
-  def verifyName = "Web_Docker_"+"${image}"+"-verify"
-
-  //Publish job name
-  def publishName = "Web_Docker_"+"${image}"+"-publish"
-
-  //Docker repo name
-  def dRepoName = "praqma/${image}"
-
-  job(verifyName) {
-	label(dockerHostLabel)
-	logRotator(-1,10)
-    wrappers {
-      timestamps()
-    }
-
-    triggers {
-      githubPush()
-    }
-
-    scm {
-      git {
-
-        remote {
-          url(cloneUrl)
-          credentials(releasePraqmaCredentials)
-        }
-
-        branch(branchName)
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
-        }
-      }
-    }
-
-    steps {
-      shell("docker build -t praqma/${image}:snapshot .")
-      shell('./test.sh')
-	   shell("docker rmi praqma/${image}:snapshot")
-    }
-
-    publishers {
-      buildPipelineTrigger(publishName) {
-        parameters{
-          gitRevision(false)
-        }
-      }
-	  mailer('', false, false)
-    }
-  }
-
-  //Publish jobs
-  job(publishName) {
-    label(dockerHostLabel)
-	logRotator(-1,10)
-    wrappers {
-      timestamps()
-    }
-    scm {
-      git {
-
-        remote {
-          url(cloneUrl)
-          credentials(releasePraqmaCredentials)
-        }
-
-        branch(branchName)
-          configure {
-            node ->
-            node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
-          }
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.UserIdentity' {
-            name("praqma");
-            email("support@praqma.net");
-          }
-        }
-      }
-    }
-
-    steps {
-      dockerBuildAndPublish {
-        repositoryName(dRepoName)
-        tag('1.${BUILD_NUMBER}')
-        registryCredentials('docker-hub-crendential')
-        dockerHostURI('unix:///var/run/docker.sock')
-        forcePull(false)
-        createFingerprints(false)
-        skipDecorate()
-      }
-    }
-
-    publishers {
-      git {
-        pushOnlyIfSuccess()
-        branch('origin', branchName)
-        tag('origin', '1.${BUILD_NUMBER}') {
-          message('Tagged with 1.${BUILD_NUMBER} using Jenkins')
-          create()
-        }
-      }
-      mailer('', false, false)
-    }
-
-  }
-}
-//#########################################################################################################
+def dockerHostLabel = 'docker'
 
 //##########################################WEBSITE CONFIGURATION##########################################
 def readyBranch = 'origin/ready/**'
@@ -130,34 +11,16 @@ def descriptionHtml = """
 <p>Updated ${udate}</p>
 """
 
+//Read from config
+def webconfig = new ConfigSlurper().parse(new File("web-pipeline-dsl/webconfig.groovy").text)
 
-
-//List of websites we need to create a pipeline for
-def websites = [
-  'http://www.praqma.com':'https://github.com/Praqma/praqma.com.git',
-  'http://www.josra.org':'https://github.com/josra/josra.github.io.git',
-  'http://www.code-conf.com':'https://github.com/Praqma/code-conf.com.git',
-  'http://www.lakruzz.com':'https://github.com/lakruzz/lakruzz.github.io.git',
-  'http://code-maturity.praqma.com':'https://github.com/Praqma/code-maturity.git'
-
-]
-
-//Specify the full integration branch name
-def integrationBranches = [
-  'http://www.praqma.com':'gh-pages',
-  'http://www.josra.org':'master',
-  'http://www.code-conf.com':'gh-pages',
-  'http://www.lakruzz.com':'master',
-  'http://code-maturity.praqma.com':'gh-pages'
-]
-
-//The 'verify' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
+//The 'integrate' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
 //We're enabling pretested integration for this part of the pipeline.
 //TODO: Currently i have an issue with the docker image not picking up the correct locale when the slave is connected using ssh.
 //Ideally this should just spawn a slave just like the rest of the jobs. Instead it just uses do
-websites.each { site, weburl ->
-  job('Web_'+site.split('http://')[1] + '-verify') {
-    label(dockerHostLabel)
+webconfig.each { site, config ->
+  job("Web_${site}-integrate") {
+  label(dockerHostLabel)
 	logRotator(-1,10)
 
  	triggers {
@@ -171,7 +34,7 @@ websites.each { site, weburl ->
       git {
 
         remote {
-          url(weburl)
+          url(config.github)
           credentials(releasePraqmaCredentials)
         }
 
@@ -190,7 +53,7 @@ git log \\
     --decorate \\
     --oneline \\
     --graph \\
-    ''' + integrationBranches[site] + '''..${GIT_BRANCH} \\
+    ''' + config.integrationbranch + '''..${GIT_BRANCH} \\
     2>&1 | tee git_graph.txt
 
 GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" -1`
@@ -211,7 +74,7 @@ docker run \\
     }
 
     wrappers {
-      pretestedIntegration("SQUASHED", integrationBranches[site], "origin")
+      pretestedIntegration("SQUASHED", config.integrationbranch, "origin")
       timestamps()
     }
 
@@ -236,9 +99,9 @@ docker run \\
     }
   }
 
-  job('Web_'+site.split('http://')[1] + '-image-size-checker') {
+  job("Web_${site}-image-size-checker") {
     label(dockerHostLabel)
-	logRotator(-1,10)
+	  logRotator(-1,10)
     description(descriptionHtml)
     wrappers {
       timestamps()
@@ -248,11 +111,11 @@ docker run \\
       git {
 
         remote {
-          url(weburl)
+          url(config.github)
           credentials(releasePraqmaCredentials)
         }
 
-        branch(integrationBranches[site])
+        branch(config.integrationbranch)
 
         configure {
           node ->
@@ -263,7 +126,7 @@ docker run \\
 
     steps {
       shell("""
-docker run -u jenkins --rm -v \$(pwd):/home/jenkins/site/ praqma/image-size-checker groovy /home/jenkins/imageSizeChecker.groovy
+docker run --rm -v \$(pwd):/site praqma/image-size-checker:1.8 imagecheck --resolution=1920x1080 --target=/site
       """)
     }
 
@@ -272,43 +135,8 @@ docker run -u jenkins --rm -v \$(pwd):/home/jenkins/site/ praqma/image-size-chec
     }
   }
 
-  job('Web_'+site.split('http://')[1] + '-geb') {
-    label(dockerHostLabel)
-    description(descriptionHtml)
-
-    wrappers {
-      timestamps()
-    }
-    scm {
-      git {
-
-        remote {
-          url(weburl)
-          credentials(releasePraqmaCredentials)
-        }
-
-        branch(integrationBranches[site])
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
-        }
-      }
-    }
-
-    steps {
-      shell("""
-docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home/jenkins/run.sh
-      """)
-    }
-
-    publishers {
-      textFinder(/Assertion failed:/, ''  , true, false, true )
-    }
-  }
-
   //TRIGGER JOBS
-  job('Web_'+site.split('http://')[1] + '-trigger') {
+  job("Web_${site}-trigger") {
 	logRotator(-1,10)
     wrappers {
       timestamps()
@@ -317,16 +145,15 @@ docker run -u jenkins --rm -v \${WORKSPACE}:/home/jenkins/site/ praqma/geb /home
       githubPush()
     }
 
-
     scm {
       git {
 
         remote {
-          url(weburl)
+          url(config.github)
           credentials(releasePraqmaCredentials)
         }
 
-        branch(integrationBranches[site])
+        branch(config.integrationbranch)
 
         configure {
           node ->
@@ -342,7 +169,7 @@ git branch -a
 export GIT_STABLE_BRANCH=$(git branch -a | grep -q -e "remotes/origin/stable$" && echo stable )
 
 if [ "${GIT_STABLE_BRANCH}x" == "x" ] ; then
-  export GIT_STABLE_BRANCH=''' + integrationBranches[site] + '''
+  export GIT_STABLE_BRANCH=''' + config.integrationbranch + '''
 fi
 
 git log \\
@@ -371,8 +198,8 @@ cat git.env
         propertiesFile('git.env')
       }
       downstreamParameterized {
-        trigger(['Web_'+site.split('http://')[1] + '-linkcheck',
-                 'Web_'+site.split('http://')[1] + '-resource-analysis']) {
+        trigger(["Web_${site}-linkcheck",
+                 "Web_${site}-resource-analysis"]) {
           block {
             buildStepFailure('FAILURE')
             failure('FAILURE')
@@ -384,7 +211,7 @@ cat git.env
         }
       }
       downstreamParameterized {
-        trigger(['Web_'+site.split('http://')[1] + '-image-size-checker' ] ) {
+        trigger(["Web_${site}-image-size-checker"] ) {
           block {
             buildStepFailure('never')
             failure('never')
@@ -416,14 +243,13 @@ cat git.env
           }
         }
       }
-
     }
   }
 
   //The linkchecker job should run the linkchecker command and produce a set of parsable report files
-  job('Web_'+site.split('http://')[1] + '-linkcheck') {
+  job("Web_${site}-linkcheck") {
     label('linkchecker')
-	logRotator(-1,10)
+	  logRotator(-1,10)
     description(descriptionHtml)
     wrappers {
       timestamps()
@@ -433,11 +259,11 @@ cat git.env
       git {
 
         remote {
-          url(weburl)
+          url(config.github)
           credentials(releasePraqmaCredentials)
         }
 
-        branch(integrationBranches[site])
+        branch(config.integrationbranch)
 
         configure {
           node ->
@@ -493,8 +319,8 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
     }
   }
   //The resource analysis job. TODO: Implement this
-  job('Web_'+site.split('http://')[1] + '-resource-analysis') {
-	label('ruby')
+  job("Web_${site}-resource-analysis") {
+	label('docker')
 	logRotator(-1,10)
     wrappers {
       timestamps()
@@ -503,11 +329,11 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
       git {
 
         remote {
-          url(weburl)
+          url(config.github)
           credentials(releasePraqmaCredentials)
         }
 
-        branch(integrationBranches[site])
+        branch(config.integrationbranch)
 
         configure {
           node ->
@@ -518,36 +344,35 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
 
     steps {
       shell('''
-ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
-
-echo "Unused files:"
-grep '<failure type="Unusued file">' report_analysis_unused.xml || echo "INFO: no unused files"
-
+docker run --rm -v $(pwd):/home/jenkins ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
 ''')
     }
     publishers {
+
 	  archiveXUnit {
+
 	    jUnit {
-		  pattern('report_*.xml')
-		  failIfNotNew(false)
+		    pattern('report_*.xml')
+		    failIfNotNew(false)
 	    }
-        failedThresholds {
+
+      failedThresholds {
+        unstableNew(0)
+        unstable()
+        failure()
+        failureNew()
+      }
+      skippedThresholds{
           unstableNew(0)
-          unstable()
+          unstable(0)
           failure()
           failureNew()
-        }
-        skippedThresholds{
-            unstableNew(0)
-            unstable(0)
-            failure()
-            failureNew()
-        }
+      }
 	  }
 
-      archiveArtifacts('report_*.xml')
+    archiveArtifacts('report_*.xml')
 
-	  mailer('', false, false)
+	    mailer('', false, false)
     }
   }
 }
