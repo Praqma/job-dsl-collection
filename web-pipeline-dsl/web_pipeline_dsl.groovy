@@ -349,7 +349,7 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
     }
 
     steps {
-      copyArtifacts('upstream') {
+      copyArtifacts("Web_${site}-integrate") {
         includePatterns('_site/**')
         optional()
         buildSelector {
