@@ -350,30 +350,33 @@ docker run --rm -v $(pwd):/home/jenkins praqma/gh-pages ruby /opt/static-analysi
     }
     publishers {
 
-	  archiveXUnit {
+	    archiveXUnit {
+  	    jUnit {
+  		    pattern('report_*.xml')
+  		    failIfNotNew(false)
+  	    }
 
-	    jUnit {
-		    pattern('report_*.xml')
-		    failIfNotNew(false)
+        failedThresholds {
+          unstableNew()
+          unstable()
+          failure(0)
+          failureNew()
+        }
 	    }
 
-      failedThresholds {
-        unstableNew(0)
-        unstable()
-        failure()
-        failureNew()
+      archiveArtifacts('report_*.xml')
+      extendedEmail {
+        triggers {
+          failure {
+            attachBuildLog(true)
+            attachmentPatterns('report_*.xml')
+            sendTo {
+              developers()
+              culprits()
+            }
+          }
+        }
       }
-      skippedThresholds{
-          unstableNew(0)
-          unstable(0)
-          failure()
-          failureNew()
-      }
-	  }
-
-    archiveArtifacts('report_*.xml')
-
-	    mailer('', false, false)
     }
   }
 }
