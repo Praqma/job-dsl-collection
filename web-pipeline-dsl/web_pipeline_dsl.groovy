@@ -344,7 +344,7 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
 
     steps {
       shell('''
-docker run --rm -v $(pwd):/home/jenkins ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
+docker run --rm -v $(pwd):/home/jenkins praqma/gh-pages ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
 ''')
     }
     publishers {
