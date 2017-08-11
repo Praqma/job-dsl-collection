@@ -23,9 +23,6 @@ webconfig.each { site, config ->
   label(dockerHostLabel)
 	logRotator(-1,10)
 
- 	triggers {
-        githubPush()
-    }
     wrappers {
       timestamps()
     }
@@ -93,6 +90,14 @@ docker run \\
             attachBuildLog(true)
             attachmentPatterns('*.txt')
             recipientList('${GIT_AUTHOR_COMMITTER}')
+          }
+        }
+      }
+      downstreamParameterized {
+        trigger("Web_${site}-trigger") {
+          condition('SUCCESS')
+          parameters {
+              currentBuild()
           }
         }
       }
@@ -344,9 +349,24 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
     }
 
     steps {
-      shell('''
-docker run --rm -v $(pwd):/home/jenkins praqma/gh-pages ruby /opt/static-analysis/analyzer.rb -c /opt/static-analysis/report_duplication_junit_template.xml -u /opt/static-analysis/report_usage_analysis_junit_template.xml
-''')
+      copyArtifacts('upstream') {
+        includePatterns('_site/**')
+        optional()
+        buildSelector {
+            upstreamBuild {
+              allowUpstreamDependencies(true)
+              fallbackToLastSuccessful(true)
+            }
+        }
+      }
+      shell('''docker run \
+--rm \
+-v $(pwd):/home/jenkins \
+praqma/gh-pages \
+ruby /opt/static-analysis/analyzer.rb \
+-s /home/jenkins/_site \
+-c /opt/static-analysis/report_duplication_junit_template.xml \
+-u /opt/static-analysis/report_usage_analysis_junit_template.xml''')
     }
     publishers {
 
