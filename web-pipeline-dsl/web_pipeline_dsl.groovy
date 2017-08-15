@@ -358,8 +358,8 @@ ruby /opt/static-analysis/analyzer.rb \
 
         failedThresholds {
           unstableNew()
-          unstable()
-          failure(0)
+          unstable(0)
+          failure()
           failureNew()
         }
 	    }
