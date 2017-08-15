@@ -382,7 +382,7 @@ ruby /opt/static-analysis/analyzer.rb \
 }
 
 //Create views
-nestedView("Website_Pipelines2") {
+nestedView("Website_Pipelines") {
   views { 
     webconfig.each { site, config ->
       delegate.buildPipelineView("${site}") {
