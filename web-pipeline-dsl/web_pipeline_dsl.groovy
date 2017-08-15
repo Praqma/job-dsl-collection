@@ -204,7 +204,8 @@ cat git.env
       }
       downstreamParameterized {
         trigger(["Web_${site}-linkcheck",
-                 "Web_${site}-resource-analysis"]) {
+                 "Web_${site}-resource-analysis",
+                 "Web_${site}-image-size-checker"]) {
           block {
             buildStepFailure('FAILURE')
             failure('FAILURE')
@@ -215,19 +216,8 @@ cat git.env
           }
         }
       }
-      downstreamParameterized {
-        trigger(["Web_${site}-image-size-checker"] ) {
-          block {
-            buildStepFailure('never')
-            failure('never')
-            unstable('never')
-          }
-          parameters{
-            gitRevision(true)
-          }
-        }
-      }
     }
+    
     publishers {
       git {
         pushOnlyIfSuccess()
