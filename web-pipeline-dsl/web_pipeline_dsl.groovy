@@ -253,7 +253,7 @@ cat git.env
 
   //The linkchecker job should run the linkchecker command and produce a set of parsable report files
   job("Web_${site}-linkcheck") {
-    label('linkchecker')
+    label(dockerHostLabel)
 	  logRotator(-1,10)
     description(descriptionHtml)
     wrappers {
@@ -279,26 +279,16 @@ cat git.env
 
     steps {
       shell("""
-#!/usr/bin/env bash -x
-
-run_linkchecker () {
-  linkchecker \\
-     \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
+docker run --rm -v $(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/linkchecker linkchecker \\
+     $(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
      --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
      --ignore-url=^tel: \\
      -o text -Fcsv/linkchecker.report.csv \\
      -Fhtml/linkchecker.report.html \\
      --complete \\
-     ${site} \\
+     http://${site} \\
      > linkchecker.log 2>&1 \\
-     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
-}
-
-run_linkchecker
-grep "timeout: timed out" linkchecker.report.csv && ( echo "We have timeout - try again in 10 sec" && sleep 10 && run_linkchecker )
-
-grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo "ERROR: linkchecker issue(s) detected" )
-
+     || echo 'INFO: Warnings and/or errors detected - needs interpretation' 
 """)
     }
 
@@ -356,7 +346,7 @@ grep "found. 0 errors found." linkchecker.log || ( cat linkchecker.log  && echo 
             upstreamBuild {
               allowUpstreamDependencies(true)
               fallbackToLastSuccessful(true)
-            }
+          }
         }
       }
       shell('''docker run \
