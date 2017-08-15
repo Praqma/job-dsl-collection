@@ -395,6 +395,14 @@ nestedView("Website_Pipelines") {
 }
 
 listView("Website_Jobs") {
+  columns {
+    status()
+    weather()
+    name()
+    lastSuccess()
+    lastFailure()
+    lastDuration()
+  }
   jobs {
     regex("Web_.*")
   }
