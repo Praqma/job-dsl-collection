@@ -381,4 +381,18 @@ ruby /opt/static-analysis/analyzer.rb \
   }
 }
 
+//Create views
+nestedView("Website_Pipelines2") {
+  views {
+    webconfig.each { site, config ->
+      buildPipelineView("${site}") {
+        selectedJob("Web_${site}-integrate")
+        displayedBuilds(10)
+        title("${site}")
+      }
+    }  
+  }
+}
+
+
 //#########################################################################################################
