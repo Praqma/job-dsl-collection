@@ -121,6 +121,7 @@ docker run \\
       downstreamParameterized {
         trigger("Web_${site}-trigger") {
           condition('SUCCESS')
+          triggerWithNoParameters(true)
           parameters {
               currentBuild()
           }
