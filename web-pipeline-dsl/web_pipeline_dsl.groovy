@@ -280,7 +280,7 @@ cat git.env
     steps {
       shell("""
 docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/linkchecker linkchecker \\
-     $(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
+     \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
      --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
      --ignore-url=^tel: \\
      -o text -Fcsv/linkchecker.report.csv \\
