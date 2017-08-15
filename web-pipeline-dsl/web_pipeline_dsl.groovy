@@ -396,7 +396,6 @@ nestedView("Website_Pipelines") {
 
 listView("Website_Jobs") {
   jobFilters {
-    matchType(MatchType.INCLUDE_MATCHED)
     regex("Web_.*")
   }
 }
