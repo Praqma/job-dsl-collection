@@ -128,7 +128,7 @@ docker run \\
       }
     }
 
-    configure configureSlack
+    configure configureSlack()
   }
 
   job("Web_${site}-image-size-checker") {
