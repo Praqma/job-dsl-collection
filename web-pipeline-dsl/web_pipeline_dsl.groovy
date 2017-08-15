@@ -14,6 +14,27 @@ def descriptionHtml = """
 //Read from config
 def webconfig = new ConfigSlurper().parse(readFileFromWorkspace("web-pipeline-dsl/webconfig.groovy"))
 
+def Closure configureSlack() { 
+  return {
+    it / 'publishers' << 'jenkins.plugins.slack.SlackNotifier' {
+      teamDomain('praqma')
+      baseUrl()
+      authTokenCredentialId('praqma-slack')
+      room('#jenkins-noise')
+      startNotification(true)
+      notifySuccess(true)
+      notifyAborted(false)
+      notifyUnstable(true)
+      notifyFailure(true)
+      notifyBackToNormal(false)
+      includeTestSummary(false)
+      includeFailedTests(false)
+      commitInfoChoice('AUTHORS_AND_TITLES')
+      includeCustomMessage(false)      
+    }
+  }
+}
+
 //The 'integrate' job is the one that has to pass the tollgate criteria. For websites this is: jekyll build
 //We're enabling pretested integration for this part of the pipeline.
 //TODO: Currently i have an issue with the docker image not picking up the correct locale when the slave is connected using ssh.
@@ -106,6 +127,8 @@ docker run \\
         }
       }
     }
+
+    configure configureSlack
   }
 
   job("Web_${site}-image-size-checker") {
