@@ -27,6 +27,10 @@ webconfig.each { site, config ->
       timestamps()
     }
 
+    triggers {
+      scm("*/2 * * * *")
+    }
+
     scm {
       git {
 
