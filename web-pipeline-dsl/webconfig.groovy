@@ -17,3 +17,8 @@
 	github = "https://github.com/Praqma/code-maturity.git"
 	integrationbranch = "gh-pages"
 }
+
+"www.lakruzz.com" {
+	github = "https://github.com/lakruzz/lakruzz.github.io.git"
+	integrationbranch = "master"
+}
