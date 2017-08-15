@@ -150,10 +150,6 @@ docker run --rm -v \$(pwd):/site praqma/image-size-checker:1.8 imagecheck --reso
     wrappers {
       timestamps()
     }
-    triggers {
-      githubPush()
-    }
-
     scm {
       git {
 
