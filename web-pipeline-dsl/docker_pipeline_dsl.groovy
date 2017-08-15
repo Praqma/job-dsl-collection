@@ -49,8 +49,7 @@ currentDockerImages.each { image ->
 
     steps {
       shell("docker build -t praqma/${image}:snapshot .")
-      shell('./test.sh')
-	   shell("docker rmi praqma/${image}:snapshot")
+	    shell("docker rmi praqma/${image}:snapshot")
     }
 
     publishers {
