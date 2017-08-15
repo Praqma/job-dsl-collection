@@ -383,9 +383,9 @@ ruby /opt/static-analysis/analyzer.rb \
 
 //Create views
 nestedView("Website_Pipelines2") {
-  views {
+  views { 
     webconfig.each { site, config ->
-      buildPipelineView("${site}") {
+      delegate.buildPipelineView("${site}") {
         selectedJob("Web_${site}-integrate")
         displayedBuilds(10)
         title("${site}")
@@ -393,6 +393,5 @@ nestedView("Website_Pipelines2") {
     }  
   }
 }
-
 
 //#########################################################################################################
