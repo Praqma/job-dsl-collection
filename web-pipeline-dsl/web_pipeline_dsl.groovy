@@ -14,7 +14,7 @@ def descriptionHtml = """
 //Read from config
 def webconfig = new ConfigSlurper().parse(readFileFromWorkspace("web-pipeline-dsl/webconfig.groovy"))
 
-def Closure configureSlack() { 
+def Closure configureSlack() {
   return {
     it / 'publishers' << 'jenkins.plugins.slack.SlackNotifier' {
       teamDomain('praqma')
@@ -30,7 +30,7 @@ def Closure configureSlack() {
       includeTestSummary(false)
       includeFailedTests(false)
       commitInfoChoice('AUTHORS_AND_TITLES')
-      includeCustomMessage(false)      
+      includeCustomMessage(false)
     }
   }
 }
@@ -41,6 +41,7 @@ def Closure configureSlack() {
 //Ideally this should just spawn a slave just like the rest of the jobs. Instead it just uses do
 webconfig.each { site, config ->
   job("Web_${site}-integrate") {
+  disabled(true)
   label(dockerHostLabel)
 	logRotator(-1,10)
 
@@ -133,6 +134,7 @@ docker run \\
   }
 
   job("Web_${site}-image-size-checker") {
+    disabled(true)
     label(dockerHostLabel)
 	  logRotator(-1,10)
     description(descriptionHtml)
@@ -170,6 +172,7 @@ docker run --rm -v \$(pwd):/site praqma/image-size-checker:1.8 imagecheck --reso
 
   //TRIGGER JOBS
   job("Web_${site}-trigger") {
+  disabled(true)
 	logRotator(-1,10)
     wrappers {
       timestamps()
@@ -241,7 +244,7 @@ cat git.env
         }
       }
     }
-    
+
     publishers {
       git {
         pushOnlyIfSuccess()
@@ -267,6 +270,7 @@ cat git.env
 
   //The linkchecker job should run the linkchecker command and produce a set of parsable report files
   job("Web_${site}-linkcheck") {
+    disabled(true)
     label(dockerHostLabel)
 	  logRotator(-1,10)
     description(descriptionHtml)
@@ -302,7 +306,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
      --complete \\
      http://${site} \\
      > linkchecker.log 2>&1 \\
-     || echo 'INFO: Warnings and/or errors detected - needs interpretation' 
+     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
 """)
     }
 
@@ -330,6 +334,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
   }
   //The resource analysis job. TODO: Implement this
   job("Web_${site}-resource-analysis") {
+  disabled(true)
 	label('docker')
 	logRotator(-1,10)
     wrappers {
@@ -407,14 +412,14 @@ ruby /opt/static-analysis/analyzer.rb \
 
 //Create views
 nestedView("Website_Pipelines") {
-  views { 
+  views {
     webconfig.each { site, config ->
       delegate.buildPipelineView("${site}") {
         selectedJob("Web_${site}-integrate")
         displayedBuilds(10)
         title("${site}")
       }
-    }  
+    }
   }
 }
 
