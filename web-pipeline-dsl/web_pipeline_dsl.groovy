@@ -1,5 +1,5 @@
 def branchName = "master"
-def releasePraqmaCredentials = '100247a2-70f4-4a4e-a9f6-266d139da9db'
+def releasePraqmaCredentials = 'github'
 def dockerHostLabel = 'docker'
 
 //##########################################WEBSITE CONFIGURATION##########################################
