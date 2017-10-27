@@ -1,5 +1,5 @@
 def branchName = "master"
-def releasePraqmaCredentials = '100247a2-70f4-4a4e-a9f6-266d139da9db'
+def releasePraqmaCredentials = 'github'
 def dockerHostLabel = 'docker'
 
 //##########################################WEBSITE CONFIGURATION##########################################
@@ -14,7 +14,7 @@ def descriptionHtml = """
 //Read from config
 def webconfig = new ConfigSlurper().parse(readFileFromWorkspace("web-pipeline-dsl/webconfig.groovy"))
 
-def Closure configureSlack() { 
+def Closure configureSlack() {
   return {
     it / 'publishers' << 'jenkins.plugins.slack.SlackNotifier' {
       teamDomain('praqma')
@@ -30,7 +30,7 @@ def Closure configureSlack() {
       includeTestSummary(false)
       includeFailedTests(false)
       commitInfoChoice('AUTHORS_AND_TITLES')
-      includeCustomMessage(false)      
+      includeCustomMessage(false)
     }
   }
 }
@@ -241,7 +241,7 @@ cat git.env
         }
       }
     }
-    
+
     publishers {
       git {
         pushOnlyIfSuccess()
@@ -302,7 +302,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
      --complete \\
      http://${site} \\
      > linkchecker.log 2>&1 \\
-     || echo 'INFO: Warnings and/or errors detected - needs interpretation' 
+     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
 """)
     }
 
@@ -407,14 +407,14 @@ ruby /opt/static-analysis/analyzer.rb \
 
 //Create views
 nestedView("Website_Pipelines") {
-  views { 
+  views {
     webconfig.each { site, config ->
       delegate.buildPipelineView("${site}") {
         selectedJob("Web_${site}-integrate")
         displayedBuilds(10)
         title("${site}")
       }
-    }  
+    }
   }
 }
 
