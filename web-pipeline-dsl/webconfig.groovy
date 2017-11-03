@@ -5,7 +5,7 @@
 
 "www.josra.org" {
 	github = "https://github.com/josra/josra.github.io.git"
-	integrationbranch = "master"  
+	integrationbranch = "master"
 }
 
 "www.code-conf.com" {
@@ -16,9 +16,4 @@
 "code-maturity.praqma.com" {
 	github = "https://github.com/Praqma/code-maturity.git"
 	integrationbranch = "gh-pages"
-}
-
-"www.lakruzz.com" {
-	github = "https://github.com/lakruzz/lakruzz.github.io.git"
-	integrationbranch = "master"
 }
