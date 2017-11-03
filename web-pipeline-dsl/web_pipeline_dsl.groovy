@@ -330,7 +330,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
   }
   //The resource analysis job. TODO: Implement this
   job("Web_${site}-resource-analysis") {
-	label('docker')
+  label(dockerHostLabel)
 	logRotator(-1,10)
     wrappers {
       timestamps()
