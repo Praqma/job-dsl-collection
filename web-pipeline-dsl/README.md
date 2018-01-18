@@ -2,7 +2,7 @@
 
 ## Infrastructure
 
-If you want to use Docker for your slaves. Docker plugin is required. With the latest version of Docker (currently `1.10`) i had to build a snapshot version (`1.16.1-SNAPSHOT`) of the Docker plugin to get it working. Docker is also required if you want to have the pre-configured environment.
+If you want to use Docker for your slaves Docker plugin for Jenkins is required. Docker is also required if you want to have the pre-configured environment.
 
 The Docker plugin requires just a Docker host that has internet access to pull images when needed. The Docker host acts as a cloud on Jenkins and can spawn slaves on demand.
 
