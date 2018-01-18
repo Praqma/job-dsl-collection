@@ -90,7 +90,7 @@ docker run \\
        -u jenkins \\
        --rm \\
        -v \$(pwd):/home/jenkins \\
-       praqma/gh-pages \\
+       praqma/jekyll:0.2 \\
        jekyll build 2>&1 | tee jekyll_build.txt
 """)
     }
@@ -366,7 +366,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
       shell('''docker run \
 --rm \
 -v $(pwd):/home/jenkins \
-praqma/gh-pages \
+praqma/jekyll:0.2 \
 ruby /opt/static-analysis/analyzer.rb \
 -s /home/jenkins/_site \
 -c /opt/static-analysis/report_duplication_junit_template.xml \
