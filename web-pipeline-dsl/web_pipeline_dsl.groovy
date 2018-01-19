@@ -328,10 +328,10 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
 
     }
   }
-  //The resource analysis job. TODO: Implement this
+  //The resource analysis job.
   job("Web_${site}-resource-analysis") {
   label(dockerHostLabel)
-	logRotator(-1,10)
+	logRotator(-1,25)
     wrappers {
       timestamps()
     }
@@ -381,10 +381,10 @@ ruby /opt/static-analysis/analyzer.rb \
   	    }
 
         failedThresholds {
-          unstableNew()
+          unstableNew(0)
           unstable(0)
-          failure()
-          failureNew()
+          failure(0)
+          failureNew(0)
         }
 	    }
 
