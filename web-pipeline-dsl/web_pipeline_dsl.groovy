@@ -85,14 +85,9 @@ env | grep -e '^GIT' > git.env
       environmentVariables {
         propertiesFile('git.env')
       }
-      shell("""
-docker run \\
-       -u jenkins \\
-       --rm \\
-       -v \$(pwd):/home/jenkins \\
-       praqma/jekyll:0.2 \\
-       jekyll build 2>&1 | tee jekyll_build.txt
-""")
+      shell('''
+docker run --rm -u $(id -u):$(id -g) -v $(pwd):/srv/jekyll -w /srv/jekyll praqma/jekyll:0.2 ./build.sh 2>&1 | tee jekyll_build.txt
+''')
     }
 
     wrappers {
@@ -364,13 +359,15 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
         }
       }
       shell('''docker run \
---rm \
--v $(pwd):/home/jenkins \
-praqma/jekyll:0.2 \
-ruby /opt/static-analysis/analyzer.rb \
--s /home/jenkins/_site \
--c /opt/static-analysis/report_duplication_junit_template.xml \
--u /opt/static-analysis/report_usage_analysis_junit_template.xml''')
+   --rm \
+   --tty \
+   --volume $(pwd):/website:rw \
+   --workdir /website \
+   praqma/jekyll:0.2 \
+   analyze \
+     --source _site \
+     --copies /opt/static-analysis/template_report_duplication_junit.xml \
+     --unused /opt/static-analysis/template_report_usage_junit.xml''')
     }
     publishers {
 
