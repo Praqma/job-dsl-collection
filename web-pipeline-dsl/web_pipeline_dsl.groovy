@@ -1,6 +1,9 @@
 def branchName = "master"
 def releasePraqmaCredentials = 'github'
 def dockerHostLabel = 'docker && !utility-slave'
+def jobPrefix = ''
+def isJobDisabled = false
+def jekyllTag = '0.2'
 
 //##########################################WEBSITE CONFIGURATION##########################################
 def readyBranch = 'origin/ready/**'
@@ -40,9 +43,10 @@ def Closure configureSlack() {
 //TODO: Currently i have an issue with the docker image not picking up the correct locale when the slave is connected using ssh.
 //Ideally this should just spawn a slave just like the rest of the jobs. Instead it just uses do
 webconfig.each { site, config ->
-  job("Web_${site}-integrate") {
-  label(dockerHostLabel)
-	logRotator(-1,10)
+  job("${jobPrefix}Web_${site}-integrate") {
+    disabled(isJobDisabled)
+    label(dockerHostLabel)
+	  logRotator(-1,10)
 
     wrappers {
       timestamps()
@@ -54,7 +58,6 @@ webconfig.each { site, config ->
 
     scm {
       git {
-
         remote {
           url(config.github)
           credentials(releasePraqmaCredentials)
@@ -85,9 +88,12 @@ env | grep -e '^GIT' > git.env
       environmentVariables {
         propertiesFile('git.env')
       }
-      shell('''
-docker run --rm -u $(id -u):$(id -g) -v $(pwd):/srv/jekyll -w /srv/jekyll praqma/jekyll:0.2 ./build.sh 2>&1 | tee jekyll_build.txt
-''')
+      shell('''docker run \
+--rm \
+-u $(id -u):$(id -g) \
+-v $(pwd):/srv/jekyll \
+-w /srv/jekyll \
+praqma/jekyll:''' + jekyllTag + ''' ./build.sh 2>&1 | tee jekyll_build.txt''')
     }
 
     wrappers {
@@ -114,7 +120,7 @@ docker run --rm -u $(id -u):$(id -g) -v $(pwd):/srv/jekyll -w /srv/jekyll praqma
         }
       }
       downstreamParameterized {
-        trigger("Web_${site}-trigger") {
+        trigger("${jobPrefix}Web_${site}-trigger") {
           condition('SUCCESS')
           triggerWithNoParameters(true)
           parameters {
@@ -127,7 +133,8 @@ docker run --rm -u $(id -u):$(id -g) -v $(pwd):/srv/jekyll -w /srv/jekyll praqma
     configure configureSlack()
   }
 
-  job("Web_${site}-image-size-checker") {
+  job("${jobPrefix}Web_${site}-image-size-checker") {
+    disabled(isJobDisabled)
     label(dockerHostLabel)
 	  logRotator(-1,10)
     description(descriptionHtml)
@@ -164,8 +171,9 @@ docker run --rm -v \$(pwd):/site praqma/image-size-checker:1.8 imagecheck --reso
   }
 
   //TRIGGER JOBS
-  job("Web_${site}-trigger") {
-	logRotator(-1,10)
+  job("${jobPrefix}Web_${site}-trigger") {
+    disabled(isJobDisabled)
+    logRotator(-1,10)
     wrappers {
       timestamps()
     }
@@ -222,9 +230,9 @@ cat git.env
         propertiesFile('git.env')
       }
       downstreamParameterized {
-        trigger(["Web_${site}-linkcheck",
-                 "Web_${site}-resource-analysis",
-                 "Web_${site}-image-size-checker"]) {
+        trigger(["${jobPrefix}Web_${site}-linkcheck",
+                 "${jobPrefix}Web_${site}-resource-analysis",
+                 "${jobPrefix}Web_${site}-image-size-checker"]) {
           block {
             buildStepFailure('FAILURE')
             failure('FAILURE')
@@ -261,7 +269,8 @@ cat git.env
   }
 
   //The linkchecker job should run the linkchecker command and produce a set of parsable report files
-  job("Web_${site}-linkcheck") {
+  job("${jobPrefix}Web_${site}-linkcheck") {
+    disabled(isJobDisabled)
     label(dockerHostLabel)
 	  logRotator(-1,10)
     description(descriptionHtml)
@@ -324,9 +333,10 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
     }
   }
   //The resource analysis job.
-  job("Web_${site}-resource-analysis") {
-  label(dockerHostLabel)
-	logRotator(-1,25)
+  job("${jobPrefix}Web_${site}-resource-analysis") {
+    disabled(isJobDisabled)
+    label(dockerHostLabel)
+	  logRotator(-1,25)
     wrappers {
       timestamps()
     }
@@ -348,7 +358,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
     }
 
     steps {
-      copyArtifacts("Web_${site}-integrate") {
+      copyArtifacts("${jobPrefix}Web_${site}-integrate") {
         includePatterns('_site/**')
         optional()
         buildSelector {
@@ -359,15 +369,15 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
         }
       }
       shell('''docker run \
-   --rm \
-   --tty \
-   --volume $(pwd):/website:rw \
-   --workdir /website \
-   praqma/jekyll:0.2 \
-   analyze \
-     --source _site \
-     --copies /opt/static-analysis/template_report_duplication_junit.xml \
-     --unused /opt/static-analysis/template_report_usage_junit.xml''')
+--rm \
+--tty \
+--volume $(pwd):/website:rw \
+--workdir /website \
+praqma/jekyll:''' + jekyllTag + ''' \
+analyze \
+--source _site \
+--copies /opt/static-analysis/template_report_duplication_junit.xml \
+--unused /opt/static-analysis/template_report_usage_junit.xml''')
     }
     publishers {
 
@@ -403,11 +413,11 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
 }
 
 //Create views
-nestedView("Website_Pipelines") {
+nestedView("${jobPrefix}Website_Pipelines") {
   views {
     webconfig.each { site, config ->
       delegate.buildPipelineView("${site}") {
-        selectedJob("Web_${site}-integrate")
+        selectedJob("${jobPrefix}Web_${site}-integrate")
         displayedBuilds(10)
         title("${site}")
       }
@@ -415,7 +425,7 @@ nestedView("Website_Pipelines") {
   }
 }
 
-listView("Website_Jobs") {
+listView("${jobPrefix}Website_Jobs") {
   columns {
     status()
     weather()
@@ -425,7 +435,7 @@ listView("Website_Jobs") {
     lastDuration()
   }
   jobs {
-    regex("Web_.*")
+    regex("${jobPrefix}Web_.*")
   }
 }
 
