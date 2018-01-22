@@ -71,18 +71,10 @@ webconfig.each { site, config ->
     }
 
     steps {
-      shell('''
-git log \\
-    --decorate \\
-    --oneline \\
-    --graph \\
-    ''' + config.integrationbranch + '''..${GIT_BRANCH} \\
-    2>&1 | tee git_graph.txt
-
-GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" -1`
-
-env | grep -e '^GIT' > git.env
-''')
+      shell('''git log \
+--decorate --oneline --graph ''' + config.integrationbranch + '''..${GIT_BRANCH} | tee git_graph.txt
+export GIT_AUTHOR_COMMITTER=`git log --pretty=format:"%ae" -1`
+env | grep -e '^GIT' > git.env''')
       environmentVariables {
         propertiesFile('git.env')
       }
@@ -376,7 +368,7 @@ analyze \
 
 	    archiveXUnit {
   	    jUnit {
-  		    pattern('report_*.xml')
+  		    pattern('analyzed_report_*.xml')
   		    failIfNotNew(false)
   	    }
 
@@ -388,12 +380,12 @@ analyze \
         }
 	    }
 
-      archiveArtifacts('report_*.xml')
+      archiveArtifacts('analyzed_report_*.xml')
       extendedEmail {
         triggers {
           failure {
             attachBuildLog(true)
-            attachmentPatterns('report_*.xml')
+            attachmentPatterns('analyzed_report_*.xml')
             sendTo {
               developers()
               culprits()
