@@ -62,12 +62,10 @@ webconfig.each { site, config ->
           url(config.github)
           credentials(releasePraqmaCredentials)
         }
-
         branch(readyBranch)
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        extensions {
+          cleanBeforeCheckout()
+          pretestedIntegration("SQUASHED", config.integrationbranch, "origin")
         }
       }
     }
@@ -94,11 +92,6 @@ env | grep -e '^GIT' > git.env
 -v $(pwd):/srv/jekyll \
 -w /srv/jekyll \
 praqma/jekyll:''' + jekyllTag + ''' ./build.sh 2>&1 | tee jekyll_build.txt''')
-    }
-
-    wrappers {
-      pretestedIntegration("SQUASHED", config.integrationbranch, "origin")
-      timestamps()
     }
 
     publishers {
