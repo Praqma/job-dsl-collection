@@ -331,6 +331,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
         branch(config.integrationbranch)
         extensions {
           cleanBeforeCheckout()
+        }
       }
     }
 
