@@ -3,7 +3,7 @@ def releasePraqmaCredentials = 'github'
 def dockerHostLabel = 'docker && !utility-slave'
 def jobPrefix = ''
 def isJobDisabled = false
-def jekyllTag = '0.2'
+def jekyllTag = '0.3'
 
 //##########################################WEBSITE CONFIGURATION##########################################
 def readyBranch = 'origin/ready/**'
@@ -84,7 +84,7 @@ env | grep -e '^GIT' > git.env''')
 -u $(id -u):$(id -g) \
 -v $(pwd):/srv/jekyll \
 -w /srv/jekyll \
-praqma/jekyll:''' + jekyllTag + ''' ./build.sh 2>&1 | tee jekyll_build.txt''')
+praqma/jekyll:''' + jekyllTag + ''' jekyll build --unpublished 2>&1 | tee jekyll_build.txt''')
     }
 
     publishers {
