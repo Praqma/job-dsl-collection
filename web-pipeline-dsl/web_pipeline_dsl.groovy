@@ -139,6 +139,7 @@ praqma/jekyll:''' + jekyllTag + ''' jekyll build --unpublished 2>&1 | tee jekyll
         branch(config.integrationbranch)
         extensions {
           cleanBeforeCheckout()
+          pruneBranches()
         }
       }
     }
@@ -172,6 +173,7 @@ docker run --rm -v \$(pwd):/site praqma/image-size-checker:1.8 imagecheck --reso
         branch(config.integrationbranch)
         extensions {
           cleanBeforeCheckout()
+          pruneBranches()
         }
       }
     }
@@ -271,6 +273,7 @@ cat git.env
         branch(config.integrationbranch)
         extensions {
           cleanBeforeCheckout()
+          pruneBranches()
         }
       }
     }
@@ -331,6 +334,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
         branch(config.integrationbranch)
         extensions {
           cleanBeforeCheckout()
+          pruneBranches()
         }
       }
     }
