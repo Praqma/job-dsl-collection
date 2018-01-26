@@ -66,6 +66,7 @@ webconfig.each { site, config ->
         extensions {
           cleanBeforeCheckout()
           pretestedIntegration("SQUASHED", config.integrationbranch, "origin")
+          pruneBranches()
         }
       }
     }
@@ -136,10 +137,8 @@ praqma/jekyll:''' + jekyllTag + ''' ./build.sh 2>&1 | tee jekyll_build.txt''')
         }
 
         branch(config.integrationbranch)
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        extensions {
+          cleanBeforeCheckout()
         }
       }
     }
@@ -171,10 +170,8 @@ docker run --rm -v \$(pwd):/site praqma/image-size-checker:1.8 imagecheck --reso
         }
 
         branch(config.integrationbranch)
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        extensions {
+          cleanBeforeCheckout()
         }
       }
     }
@@ -272,10 +269,8 @@ cat git.env
         }
 
         branch(config.integrationbranch)
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
+        extensions {
+          cleanBeforeCheckout()
         }
       }
     }
@@ -334,11 +329,8 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
         }
 
         branch(config.integrationbranch)
-
-        configure {
-          node ->
-          node / 'extensions' << 'hudson.plugins.git.extensions.impl.CleanBeforeCheckout' {}
-        }
+        extensions {
+          cleanBeforeCheckout()
       }
     }
 
