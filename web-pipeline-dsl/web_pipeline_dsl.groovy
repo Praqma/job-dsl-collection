@@ -53,7 +53,7 @@ webconfig.each { site, config ->
     }
 
     triggers {
-      scm("*/2 * * * *")
+      scm("H/2 * * * *")
     }
 
     scm {
