@@ -3,7 +3,7 @@ def releasePraqmaCredentials = 'github'
 def dockerHostLabel = 'docker && !utility-slave'
 def jobPrefix = ''
 def isJobDisabled = false
-def jekyllTag = '0.3'
+def jekyllTag = '0.4'
 
 //##########################################WEBSITE CONFIGURATION##########################################
 def readyBranch = 'origin/ready/**'
