@@ -33,6 +33,26 @@ The Docker images have the following repositories.
 * ~~[gh-pages](https://github.com/Praqma/docker-gh-pages)~~
 * [linkchecker](https://github.com/Praqma/docker-linkchecker)
 
+### Update Jekyll
+
+Verify that below line(s) are updated with the latest [jekyll](https://hub.docker.com/r/praqma/jekyll/) image tag.
+
+```diff
+diff --git a/web-pipeline-dsl/web_pipeline_dsl.groovy b/web-pipeline-dsl/web_pipeline_dsl.groovy
+index 4a3d802..04ea75c 100644
+--- a/web-pipeline-dsl/web_pipeline_dsl.groovy
++++ b/web-pipeline-dsl/web_pipeline_dsl.groovy
+@@ -3,7 +3,7 @@ def releasePraqmaCredentials = 'github'
+ def dockerHostLabel = 'docker && !utility-slave'
+ def jobPrefix = ''
+ def isJobDisabled = false
+-def jekyllTag = '0.3'
++def jekyllTag = '0.4'
+
+ //##########################################WEBSITE CONFIGURATION##########################################
+ def readyBranch = 'origin/ready/**'
+ ```
+
 ## Testing Docker Images
 
 By convention, we've decided to let the docker images be tested by adding a `test.sh` file in the root of the repository. When a commit is pushed, the `test.sh` file is executed, if it returns a non-zero value, the test has failed.
