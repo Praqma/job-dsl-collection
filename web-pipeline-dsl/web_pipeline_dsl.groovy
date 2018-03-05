@@ -304,14 +304,7 @@ cat git.env
 
     publishers {
       warnings(null,['LinkChecker CSV (Jekyll flavor)':'linkchecker.report.csv']){
-        unstableNewAll(0)
-        unstableNewHigh(0)
-        unstableNewLow(0)
-        unstableNewNormal(0)
-        unstableTotalAll(0)
-        unstableTotalHigh(0)
-        unstableTotalNormal(0)
-        unstableTotalLow(0)
+        thresholds(['unstableTotal':'all'])
       }
 
       analysisCollector() {
