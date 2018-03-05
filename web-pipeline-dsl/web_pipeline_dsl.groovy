@@ -280,26 +280,26 @@ cat git.env
 
     steps {
       shell("""set -e
-               |sleep 60
-               |docker pull praqma/linkchecker:latest
-               |docker images praqma/linkchecker
-               |
-               |docker run --rm -t praqma/linkchecker:latest linkchecker --version
-               |docker run --rm -t praqma/linkchecker:latest cat /home/jenkins/linkchecker/linkchecker.env
-               |
-               |docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/linkchecker:latest linkchecker \\
-               |     \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
-               |     --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
-               |     --ignore-url=^tel: \\
-               |     -o text -Fcsv/linkchecker.report.csv \\
-               |     -Fhtml/linkchecker.report.html \\
-               |     --complete \\
-               |     https://${site} \\
-               |     > linkchecker.log 2>&1 \\
-               |     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
-               |
-               |cat linkchecker.log
-               |""")
+sleep 60
+docker pull praqma/linkchecker:latest
+docker images praqma/linkchecker
+
+docker run --rm -t praqma/linkchecker:latest linkchecker --version
+docker run --rm -t praqma/linkchecker:latest cat /home/jenkins/linkchecker/linkchecker.env
+
+docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/linkchecker:latest linkchecker \\
+     \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
+     --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
+     --ignore-url=^tel: \\
+     -o text -Fcsv/linkchecker.report.csv \\
+     -Fhtml/linkchecker.report.html \\
+     --complete \\
+     https://${site} \\
+     > linkchecker.log 2>&1 \\
+     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
+
+cat linkchecker.log
+""")
     }
 
     publishers {
