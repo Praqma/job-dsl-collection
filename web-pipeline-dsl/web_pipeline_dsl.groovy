@@ -279,22 +279,40 @@ cat git.env
     }
 
     steps {
-      shell("""sleep 60
-docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/linkchecker linkchecker \\
-     \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
-     --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
-     --ignore-url=^tel: \\
-     -o text -Fcsv/linkchecker.report.csv \\
-     -Fhtml/linkchecker.report.html \\
-     --complete \\
-     http://${site} \\
-     > linkchecker.log 2>&1 \\
-     || echo 'INFO: Warnings and/or errors detected - needs interpretation'
+      shell("""set -e
+      sleep 60
+      docker pull praqma/linkchecker:latest
+      docker images praqma/linkchecker
+      
+      docker run --rm -t praqma/linkchecker:latest linkchecker --version
+      docker run --rm -t praqma/linkchecker:latest cat /home/jenkins/linkchecker/linkchecker.env
+      
+      docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/linkchecker:latest \\
+           \$(test -e linkchecker_ignore_urls.txt && grep '^--ignore-url' linkchecker_ignore_urls.txt) \\
+           --user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0' \\
+           --ignore-url=^tel: \\
+           -o text -Fcsv/linkchecker.report.csv \\
+           -Fhtml/linkchecker.report.html \\
+           --complete \\
+           https://www.praqma.com \\
+           > linkchecker.log 2>&1 \\
+           || echo 'INFO: Warnings and/or errors detected - needs interpretation'
+           
+      cat linkchecker.log
 """)
     }
 
     publishers {
-      warnings(null,['LinkChecker CSV (Jekyll flavor)':'linkchecker.report.csv'])
+      warnings(null,['LinkChecker CSV (Jekyll flavor)':'linkchecker.report.csv']){
+        unstableNewAll(0)
+        unstableNewHigh(0)
+        unstableNewLow(0)
+        unstableNewNormal(0)
+        unstableTotalAll(0)
+        unstableTotalHigh(0)
+        unstableTotalNormal(0)
+        unstableTotalLow(0)
+      }
 
       analysisCollector() {
         warnings()
@@ -309,7 +327,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
       }
       archiveArtifacts('linkchecker*.*')
 
-      textFinder(/ERROR: linkchecker issue\(s\) detected/, ''  , true, false, true )
+      textFinder(/ERROR: linkchecker issue\(s\) detected|INFO: Warnings and\/or errors detected - needs interpretation/, ''  , true, false, true )
 
       mailer('', false, false)
 
