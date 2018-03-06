@@ -279,6 +279,16 @@ cat git.env
     }
 
     steps {
+      copyArtifacts("${jobPrefix}Web_${site}-integrate") {
+        includePatterns('_site/**')
+        optional()
+        buildSelector {
+          upstreamBuild {
+            allowUpstreamDependencies(true)
+            fallbackToLastSuccessful(true)
+          }
+        }
+      }
       shell("""set -e
 sleep 60
 docker pull praqma/linkchecker:latest
@@ -303,8 +313,8 @@ cat linkchecker.log
     }
 
     publishers {
-      warnings(null,['LinkChecker CSV (Jekyll flavor)':'linkchecker.report.csv']){
-        thresholds(['unstableTotal':['all':0,'low':0, 'normal':0,'high':0]])
+      warnings(null,['LinkChecker CSV (Jekyll flavor - original URL references)':'linkchecker.report.csv']){
+        thresholds(['unstableTotal':['all':1,'low':0, 'normal':1,'high':0]])
       }
 
       analysisCollector() {
