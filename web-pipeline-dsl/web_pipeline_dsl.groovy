@@ -304,7 +304,7 @@ docker run --rm -v \$(pwd):/home/jenkins -w /home/jenkins -u jenkins praqma/link
      -o text -Fcsv/linkchecker.report.csv \\
      -Fhtml/linkchecker.report.html \\
      --check-extern \\
-     https://${site} \\
+     ${config.protocol}://${site} \\
      > linkchecker.log 2>&1 \\
      || echo 'INFO: Warnings and/or errors detected - needs interpretation'
 
