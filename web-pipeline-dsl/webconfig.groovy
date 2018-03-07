@@ -17,3 +17,8 @@
 	github = "https://github.com/Praqma/code-maturity.git"
 	integrationbranch = "gh-pages"
 }
+
+"alliance.praqma.com" {
+	github = "http://github.com/Praqma/web-codeall.git"
+	integrationbranch = "master"
+}
