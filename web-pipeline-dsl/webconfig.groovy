@@ -23,7 +23,7 @@
 }
 
 "alliance.praqma.com" {
-	github = "http://github.com/Praqma/web-codeall.git"
+	github = "https://github.com/Praqma/web-alliance.git"
 	integrationbranch = "master"
-	protocol = "http"
+	protocol = "https"
 }
