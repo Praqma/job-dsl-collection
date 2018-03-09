@@ -313,7 +313,7 @@ cat linkchecker.log
     }
 
     publishers {
-      warnings(null,['LinkChecker CSV (Jekyll flavor - original URL references)':'linkchecker.report.csv']){
+      warnings(null,['LinkChecker CSV (Jekyll flavor)':'linkchecker.report.csv']){
         thresholds(['unstableTotal':['all':1,'low':0, 'normal':1,'high':0]])
       }
 
