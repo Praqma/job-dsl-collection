@@ -1,9 +1,3 @@
-"www.praqma.com" {
-	github = "https://github.com/Praqma/praqma.com.git"
-	integrationbranch = "gh-pages"
-	protocol = "https"
-}
-
 "www.josra.org" {
 	github = "https://github.com/josra/josra.github.io.git"
 	integrationbranch = "master"
